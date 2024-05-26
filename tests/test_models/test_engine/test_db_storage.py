@@ -76,13 +76,64 @@ class TestFileStorage(unittest.TestCase):
         self.assertIs(type(models.storage.all()), dict)
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_no_class(self):
         """Test that all returns all rows when no class is passed"""
+        obj1 = State(name="California")
+        obj2 = City(name="San Francisco", state_id=obj1.id)
+        obj3 = Place(name="Cozy Apartment", city_id=obj2.id)
+        models.storage.new(obj1)
+        models.storage.new(obj2)
+        models.storage.new(obj3)
+        models.storage.save()
+
+        result = models.storage.all()
+
+        self.assertIn(obj1, result.values())
+        self.assertIn(obj2, result.values())
+        self.assertIn(obj3, result.values())
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def test_new(self):
-        """test that new adds an object to the database"""
+    def test_all_with_class(self):
+        """Test that all returns objects of a specific class"""
+        obj1 = State(name="California")
+        obj2 = City(name="San Francisco", state_id=obj1.id)
+        obj3 = Place(name="Cozy Apartment", city_id=obj2.id)
+        models.storage.new(obj1)
+        models.storage.new(obj2)
+        models.storage.new(obj3)
+        models.storage.save()
+
+        result = models.storage.all(City)
+
+        for obj in result.values():
+            self.assertIsInstance(obj, City)
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def test_save(self):
-        """Test that save properly saves objects to file.json"""
+    def test_get(self):
+        """Test the get method"""
+        obj = State(name="California")
+        models.storage.new(obj)
+        models.storage.save()
+
+        result = models.storage.get(State, obj.id)
+
+        self.assertEqual(result, obj)
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    def test_count(self):
+        """Test the count method"""
+        obj1 = State(name="California")
+        obj2 = State(name="New York")
+        obj3 = State(name="Texas")
+        models.storage.new(obj1)
+        models.storage.new(obj2)
+        models.storage.new(obj3)
+        models.storage.save()
+
+        result1 = models.storage.count()
+
+        result2 = models.storage.count(State)
+
+        self.assertEqual(result1, 3)
+        self.assertEqual(result2, 3)
